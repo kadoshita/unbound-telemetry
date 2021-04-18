@@ -1,82 +1,28 @@
-on: [push, pull_request]
+on: [push]
 
-name: Continuous integration
+name: build
 
 jobs:
-  tier_1:
-    name: Tier 1
+  build:
+    name: build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
           - ubuntu-latest
-          - macOS-latest
           - windows-latest
-        toolchain:
-          - 1.40.0  # MSRV
-          - stable
-          - nightly
     steps:
       - uses: actions/checkout@v2
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: ${{ matrix.toolchain }}
+          toolchain: stable
           override: true
       - name: Run build
-        run: cargo build
-
-  tier_2:
-    name: Tier 2
-    # Allowing to fail for a while, because building OpenSSL is a huge pain
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target:
-          - aarch64-unknown-linux-gnu
-          - armv7-unknown-linux-gnueabihf
-          - x86_64-unknown-freebsd
-          - x86_64-unknown-netbsd
-          # - x86_64-unknown-openbsd
-          # - x86_64-unknown-dragonfly
-        toolchain:
-          - 1.40.0  # MSRV
-          - stable
-          - nightly
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        run: cargo build --release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1.0.0
         with:
-          profile: minimal
-          toolchain: ${{ matrix.toolchain }}
-          override: true
-          target: ${{ matrix.target }}
-      - name: Run build
-        uses: actions-rs/cargo@v1
-        env:
-          PKG_CONFIG_ALLOW_CROSS: 1
-        with:
-          command: check
-          args: --target ${{ matrix.target }} --features vendored
-          use-cross: true
-
-  lints:
-    name: Lints
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install nightly toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          components: rustfmt, clippy
-      - name: Run rustfmt
-        run: cargo fmt --all -- --check
-      - name: Run clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+          name: unbound-telemetry-${{ matrix.os }}
+          path: ./target/release/unbound-telemetry
