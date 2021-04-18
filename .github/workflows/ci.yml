@@ -3,14 +3,36 @@ on: [push]
 name: build
 
 jobs:
-  build:
-    name: build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
+  build-ubuntu:
+    name: build ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: uraimo/run-on-arch-action@v2.0.5
+        name: Run commands
+        id: runcmd
+        with:
+          arch: aarch64
+          distro: ubuntu18.04
+          githubToken: ${{ github.token }}
+          run: |
+            cargo build --release
+#      - name: Run build
+#        run: cargo build --release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: unbound-telemetry-ubuntu-amd64
+          path: ./target/release/unbound-telemetry
+  build-windows:
+    name: build windows
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install Rust toolchain
@@ -24,5 +46,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: unbound-telemetry-${{ matrix.os }}
-          path: ./target/release/unbound-telemetry
+          name: unbound-telemetry-windows
+          path: ./target/release/unbound-telemetry.exe
