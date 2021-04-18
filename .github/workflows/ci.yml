@@ -22,6 +22,9 @@ jobs:
           distro: ubuntu18.04
           githubToken: ${{ github.token }}
           run: |
+            apt-get update
+            apt-get install -y curl
+            curl https://sh.rustup.rs -sSf | sh
             cargo build --release
 #      - name: Run build
 #        run: cargo build --release
