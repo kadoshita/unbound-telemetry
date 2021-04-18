@@ -14,21 +14,33 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: uraimo/run-on-arch-action@v2.0.5
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ubuntu18.04
-          githubToken: ${{ github.token }}
-          run: |
-            apt-get update
-            apt-get install -y curl build-essential
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
-            source $HOME/.cargo/env
-            cargo build --release
-#      - name: Run build
-#        run: cargo build --release
+#       - uses: uraimo/run-on-arch-action@v2.0.5
+#         name: Run commands
+#         id: runcmd
+#         with:
+#           arch: aarch64
+#           distro: ubuntu18.04
+#           githubToken: ${{ github.token }}
+#           run: |
+#             apt-get update
+#             apt-get install -y curl build-essential libssl-dev
+#             curl https://sh.rustup.rs -sSf | sh -s -- -y
+#             rustup install stable
+#             source $HOME/.cargo/env
+#             cargo build --release
+      - name: Run build
+        run: |
+          cargo install cross
+          rustup target add aarch64-unknown-linux-gnu
+          apt install gcc-aarch64-linux-gnu
+          cat > .cargo/config << EOF
+          [build]
+          target="aarch64-unknown-linux-gnu"
+
+          [target.aarch64-unknown-linux-gnu]
+          linker = "aarch64-linux-gnu-gcc"
+          EOF
+          cargo build --release
       - name: Upload artifact
         uses: actions/upload-artifact@v1.0.0
         with:
