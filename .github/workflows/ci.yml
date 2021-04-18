@@ -33,7 +33,8 @@ jobs:
           cargo install cross
           rustup target add aarch64-unknown-linux-gnu
           sudo apt-get update
-          sudo apt-get install gcc-aarch64-linux-gnu
+          sudo apt-get install gcc-aarch64-linux-gnu build-essential curl
+          mkdir .cargo
           touch .cargo/config
           cat > .cargo/config << EOF
           [build]
